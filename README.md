@@ -19,3 +19,5 @@ homework
  只需运行main
 
 4.data文件里存放数据
+
+5.homework2_latex中存放作业2报告的latex原文件，也包括最终生成的pdf：作业2——机器学习——闵昕 王冠维
