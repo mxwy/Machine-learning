@@ -14,7 +14,6 @@ from torchvision import transforms
 from torchvision.datasets import FashionMNIST
 
 # 使用FashionMNIST数据，准备训练数据集
-
 train_data = FashionMNIST(
     root='../data/FashionMNIST',  # 数据路径
     train=True,  # 只使用训练数据集
@@ -81,8 +80,16 @@ class MyConvnet(nn.Module):
                 kernel_size=2,  # 平均值池化层，使用2*2
             ),  # 池化后：（16*28*28） ->(16*14*14)
         )
+        # 定义第二个卷积层
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(16, 32, 3, 1, 0),  # 卷及操作（16*14*14）->(32*12*12)
+            nn.ReLU(),  # 激活函数
+            nn.AvgPool2d(2, 2)  # 最大值池化操作(32*12*12) -> (32*6*6)
+        )
         self.classifer = nn.Sequential(
-            nn.Linear(16*14*14, 128),
+            nn.Linear(32 * 6 * 6, 256),
+            nn.ReLU(),
+            nn.Linear(256, 128),
             nn.ReLU(),
             nn.Linear(128, 10)
         )
@@ -90,6 +97,7 @@ class MyConvnet(nn.Module):
     # 定义网络前向传播途径
     def forward(self, x):
         x = self.conv1(x)
+        x = self.conv2(x)
         x = x.view(x.size(0), -1)  # 展平多维的卷积图层
         output = self.classifer(x)
         return output
@@ -175,16 +183,15 @@ def train_model(model, traindataloader, train_rate, criterion, optimizer, num_ep
               "val_loss_all": val_loss_all,
               "train_acc_all": train_acc_all,
               "val_acc_all": val_acc_all})
-
     for epoch in range(num_epoch):
-        print('Epoch {}:  Val Acc: {:.4f}'.format(
-            epoch, val_acc_all[epoch]))
+        print('Epoch {}: Train Acc: {:.4f} Val Acc: {:.4f}'.format(
+            epoch, train_acc_all[epoch], val_acc_all[epoch]))
     return model, train_process
 
 
 # 对模型进行训练
-optimizer = torch.optim.Adam(myconvnet.parameters(), lr=0.0003)
-# = SGD(myconvnet.parameters(), lr=0.01)
+#optimizer = torch.optim.Adam(myconvnet.parameters(), lr=0.0003)
+optimizer = SGD(myconvnet.parameters(), lr=0.01)
 criterion = nn.CrossEntropyLoss()  # 损失函数
 myconvnet, train_pross = train_model(myconvnet, train_loader, 0.8, criterion, optimizer, num_epoch=25)
 
@@ -222,7 +229,5 @@ plt.ylabel('True label')
 plt.xlabel('Predicted label')
 plt.savefig('heatmap')
 plt.show()
-
-
 
 
